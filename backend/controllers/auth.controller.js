@@ -6,6 +6,7 @@ export const login = async (req, res) => {
 	try {
 		const { userName, password } = req.body;
 
+		console.log(password);
 		if (!userName || userName.trim().length === 0) {
 			return res.status(400).json({ error: 'Username is required' });
 		}
@@ -15,20 +16,22 @@ export const login = async (req, res) => {
 		}
 
 		const user = await User.findOne({ userName });
-		const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-		if (!user || !isPasswordCorrect) {
-			return res.status(400).json({ error: 'Internal Server Error' });
+		if (user) {
+			const isPasswordCorrect = await bcrypt.compare(password, user.password);
+			if (!isPasswordCorrect) {
+				return res.status(400).json({ error: 'Invalid Password' });
+			}
+			generateTokenAndSetCookie(user._id, res);
+			res.status(200).json({
+				_id: user._id,
+				fullName: user.userName,
+				userName: user.userName,
+				profilePic: user.profilePic,
+			});
+		} else {
+			return res.status(400).json({ error: 'Invalid Username' });
 		}
-
-		generateTokenAndSetCookie(user._id, res);
-		res.status(200).json({
-			_id: user._id,
-			fullName: user.userName,
-			userName: user.userName,
-			profilePic: user.profilePic,
-		});
-
 	} catch (error) {
 		console.log('error message', error.message);
 		res.status(500).json({ error: error.message });
@@ -36,17 +39,17 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-    try{
-        res.cookie("jwt","",{maxAge:0})
-        res.status(200).json({message:"Logged out successfully"})
-    }catch{
-
-    }
+	try {
+		res.cookie('jwt', '', { maxAge: 0 });
+		res.status(200).json({ message: 'Logged out successfully' });
+	} catch {}
 };
 
 export const signup = async (req, res) => {
 	try {
 		const { fullName, userName, password, confirmPassword, gender } = req.body;
+		console.log('userName', userName);
+		console.log('fullname', fullName);
 		if (confirmPassword !== confirmPassword) {
 			return res.status(400).json({ error: "Passowords don't match" });
 		}

@@ -9,7 +9,6 @@ function Sidebar() {
         <SearchInput/>
         <div className='divider px-3'></div>
         <ConversationsContainer/>
-        
         <LogoutButton/>
     </div>
   )
